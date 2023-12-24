@@ -8,7 +8,7 @@ public enum TimelineTickType
     PhraseStart,
     Primary,
     Secondary,
-    Teritary,
+    Tertiary,
     Quaternary,
     Quinternary,
 }
@@ -77,8 +77,8 @@ public class EditorTimeline : MonoBehaviour
             var tickType = GetTickType(tickCounter, divisor);
             _timelineTicks.Add(new(time, tickType));
 
-            tickCounter = (tickCounter + 1) % divisor;
-            time += 60d / bpm;
+            tickCounter = (tickCounter + 1) % (divisor * 4);
+            time += 60d / bpm / divisor;
 
             // check if divisor or bpm changed
             if (divisor != _mapEditorManager.SnapDivisorList.GetValueAt(time) || bpm != _mapEditorManager.SongBPMList.GetValueAt(time))
@@ -100,40 +100,41 @@ public class EditorTimeline : MonoBehaviour
         {
             Vector3 tickPos = new Vector3((float)(tick.Time - _songCurrentTimeSeconds) * _timelineSpacing * _timelineSpacingMult, 0f, 0f);
             Vector3 tickScale = new Vector3(2, 30, 1);
-            Color tickColor = Color.white;
+            Vector3 tickColor;
             switch (tick.Type)
             {
                 case TimelineTickType.PhraseStart:
                     tickScale.y = 30;
-                    tickColor = Color.white;
+                    tickColor = new Vector3(255, 255, 255);
                     break;
 
                 case TimelineTickType.Primary:
                     tickScale.y = 16;
-                    tickColor = Color.white;
+                    tickColor = new Vector3(255, 255, 255);
                     break;
 
                 case TimelineTickType.Secondary:
                     tickScale.y = 12;
-                    tickColor = new Color(220, 220, 255);
+                    tickColor = new Vector3(130, 130, 255);
                     break;
 
-                case TimelineTickType.Teritary:
+                case TimelineTickType.Tertiary:
                     tickScale.y = 9;
-                    tickColor = new Color(255, 220, 235);
+                    tickColor = new Vector3(255, 130, 185);
                     break;
 
                 case TimelineTickType.Quaternary:
                     tickScale.y = 7;
-                    tickColor = new Color(245, 245, 235);
+                    tickColor = new Vector3(235, 235, 145);
                     break;
 
                 case TimelineTickType.Quinternary:
                     tickScale.y = 5;
-                    tickColor = new Color(235, 255, 235);
+                    tickColor = new Vector3(140, 255, 140);
                     break;
 
                 default:
+                    tickColor = new Vector3(255, 0, 255);
                     break;
             }
 
@@ -144,14 +145,16 @@ public class EditorTimeline : MonoBehaviour
             tickObject.transform.localPosition = tickPos;
             tickObject.transform.localScale = tickScale;
             var img = tickObject.GetComponent<Image>();
-            img.color = tickColor;
+            Color col = new Color(tickColor.x / 255f, tickColor.y / 255f, tickColor.z / 255f);
+            Debug.Log(col);
+            img.color = col;
         }
     }
 
     private TimelineTickType GetTickType(int tickCounter, int snapDivisor)
     {
         Debug.Log($"Tick counter: {tickCounter}, Snap divisor: {snapDivisor}");
-        tickCounter %= snapDivisor;
+        tickCounter %= (snapDivisor * 4);
 
         switch (snapDivisor)
         {
@@ -168,21 +171,30 @@ public class EditorTimeline : MonoBehaviour
                 return DivisorFourth(tickCounter);
 
             case 5:
-                return DivisorUniversal(tickCounter);
+                return DivisorUniversal(tickCounter, snapDivisor);
 
             case 6:
                 return DivisorSixth(tickCounter);
 
             case 7:
-                return DivisorUniversal(tickCounter);
+                return DivisorUniversal(tickCounter, snapDivisor);
 
             case 8:
                 return DivisorEight(tickCounter);
 
+            case 9:
+                return DivisorNinth(tickCounter);
+
+            case 12:
+                return DivisorTwelfth(tickCounter);
+
+            case 16:
+                return DivisorSixteenth(tickCounter);
+
             default:
                 {
                     Debug.LogWarning($"Snap divisor {snapDivisor} not found!");
-                    return DivisorUniversal(tickCounter);
+                    return DivisorUniversal(tickCounter, snapDivisor);
                 }
         }
     }
@@ -220,7 +232,12 @@ public class EditorTimeline : MonoBehaviour
             return TimelineTickType.PhraseStart;
         }
 
-        return TimelineTickType.Primary;
+        if (tickCounter % 3 == 0)
+        {
+            return TimelineTickType.Primary;
+        }
+
+        return TimelineTickType.Secondary;
     }
 
     private TimelineTickType DivisorFourth(int tickCounter)
@@ -230,17 +247,17 @@ public class EditorTimeline : MonoBehaviour
             return TimelineTickType.PhraseStart;
         }
 
-        if (tickCounter % 2 == 0)
+        if (tickCounter % 4 == 0)
         {
             return TimelineTickType.Primary;
         }
 
-        if (tickCounter % 4 == 0)
+        if (tickCounter % 2 == 0)
         {
             return TimelineTickType.Secondary;
         }
 
-        return TimelineTickType.Teritary;
+        return TimelineTickType.Tertiary;
     }
 
     private TimelineTickType DivisorSixth(int tickCounter)
@@ -250,12 +267,17 @@ public class EditorTimeline : MonoBehaviour
             return TimelineTickType.PhraseStart;
         }
 
-        if (tickCounter % 3 == 0)
+        if (tickCounter % 6 == 0)
         {
             return TimelineTickType.Primary;
         }
 
-        return TimelineTickType.Secondary;
+        if (tickCounter % 3 == 0)
+        {
+            return TimelineTickType.Secondary;
+        }
+
+        return TimelineTickType.Tertiary;
     }
 
     private TimelineTickType DivisorEight(int tickCounter)
@@ -265,7 +287,7 @@ public class EditorTimeline : MonoBehaviour
             return TimelineTickType.PhraseStart;
         }
 
-        if (tickCounter % 2 == 0)
+        if (tickCounter % 8 == 0)
         {
             return TimelineTickType.Primary;
         }
@@ -275,21 +297,102 @@ public class EditorTimeline : MonoBehaviour
             return TimelineTickType.Secondary;
         }
 
-        if (tickCounter % 8 == 0)
+        if (tickCounter % 2 == 0)
         {
-            return TimelineTickType.Teritary;
+            return TimelineTickType.Tertiary;
         }
 
         return TimelineTickType.Quaternary;
     }
 
-    private TimelineTickType DivisorUniversal(int tickCounter)
+    private TimelineTickType DivisorNinth(int tickCounter)
     {
         if (tickCounter == 0)
         {
             return TimelineTickType.PhraseStart;
         }
-        return TimelineTickType.Primary;
+
+        if (tickCounter % 9 == 0)
+        {
+            return TimelineTickType.Primary;
+        }
+
+        if (tickCounter % 3 == 0)
+        {
+            return TimelineTickType.Secondary;
+        }
+
+        return TimelineTickType.Tertiary;
+    }
+
+    private TimelineTickType DivisorTwelfth(int tickCounter)
+    {
+        if (tickCounter == 0)
+        {
+            return TimelineTickType.PhraseStart;
+        }
+
+        if (tickCounter % 12 == 0)
+        {
+            return TimelineTickType.Primary;
+        }
+
+        if (tickCounter % 6 == 0)
+        {
+            return TimelineTickType.Secondary;
+        }
+
+        if (tickCounter % 3 == 0)
+        {
+            return TimelineTickType.Tertiary;
+        }
+
+        return TimelineTickType.Quaternary;
+    }
+
+    private TimelineTickType DivisorSixteenth(int tickCounter)
+    {
+        if (tickCounter == 0)
+        {
+            return TimelineTickType.PhraseStart;
+        }
+
+        if (tickCounter % 16 == 0)
+        {
+            return TimelineTickType.Primary;
+        }
+
+        if (tickCounter % 8 == 0)
+        {
+            return TimelineTickType.Secondary;
+        }
+
+        if (tickCounter % 4 == 0)
+        {
+            return TimelineTickType.Tertiary;
+        }
+
+        if (tickCounter % 2 == 0)
+        {
+            return TimelineTickType.Quaternary;
+        }
+
+        return TimelineTickType.Quinternary;
+    }
+
+    private TimelineTickType DivisorUniversal(int tickCounter, int divisor)
+    {
+        if (tickCounter == 0)
+        {
+            return TimelineTickType.PhraseStart;
+        }
+
+        if (tickCounter % divisor == 0)
+        {
+            return TimelineTickType.Primary;
+        }
+
+        return TimelineTickType.Secondary;
     }
 
     #endregion SnapDivisor Functions
