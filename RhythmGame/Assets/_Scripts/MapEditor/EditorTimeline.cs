@@ -27,6 +27,8 @@ public struct TimelineTick
 
 public class EditorTimeline : MonoBehaviour
 {
+    private const int MAX_TICK_HEIGHT = 30;
+
     [SerializeField]
     private MapEditorManager _mapEditorManager;
 
@@ -91,10 +93,7 @@ public class EditorTimeline : MonoBehaviour
     public void UpdateTicks()
     {
         // Update the beat ticks
-        for (int i = 0; i < transform.childCount; i++)
-        {
-            Destroy(transform.GetChild(i).gameObject);
-        }
+        transform.DestoryAllChildren();
 
         foreach (var tick in _timelineTicks)
         {
@@ -138,8 +137,14 @@ public class EditorTimeline : MonoBehaviour
                     break;
             }
 
+            // shrink tick height so that it fits in the timeline
+            tickScale.y /= MAX_TICK_HEIGHT;
+
             // offset tick so that the bottoms line up
-            tickPos.y -= (30 - tickScale.y) / 2;
+            tickPos.y -= (MAX_TICK_HEIGHT - tickScale.y) / 2;
+
+            // offset to the bottom of the timeline
+            tickPos.y += 20;
 
             var tickObject = Instantiate(_beatTickPrefab, transform);
             tickObject.transform.localPosition = tickPos;

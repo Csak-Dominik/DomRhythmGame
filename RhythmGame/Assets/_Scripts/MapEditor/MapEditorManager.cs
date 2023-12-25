@@ -30,21 +30,9 @@ public class MapEditorManager : MonoBehaviour
 
         // test data
         SongBPMList.Add(new(0, 120));
-        SnapDivisorList.Add(new(0, 16));
+        SnapDivisorList.Add(new(0, 4));
 
-        SongBPMList.Add(new(10, 180));
-        SnapDivisorList.Add(new(10, 9));
-
-        SongBPMList.Add(new(20, 240));
-        SnapDivisorList.Add(new(20, 7));
-
-        SongBPMList.Add(new(30, 80));
-        SnapDivisorList.Add(new(30, 5));
-
-        SongBPMList.Add(new(40, 60));
-        SnapDivisorList.Add(new(40, 12));
-
-        SongLengthSeconds = 50;
+        SongLengthSeconds = 2.1;
         //SongCurrentTimeSeconds = 10;
     }
 
